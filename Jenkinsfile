@@ -2,20 +2,23 @@ pipeline {
     agent any
 
     parameters {
+
         choice(
             name: 'LABEL',
-            choices: ['QA', 'Beta', 'Release']
+            choices: ['QA', 'Beta', 'Release'],
             description: 'Select build type for artifact publishing'
         )
-
+    
         string(
             name: 'VERSION',
+            defaultValue: '',
             description: 'Enter release version (Example: 1.0.0)'
         )
-
+    
         string(
             name: 'QA_PERSON',
-            description: 'Enter QA engineer name'
+            defaultValue: '',
+            description: 'Enter QA engineer name (Example: Peter)'
         )
     }
 
