@@ -5,16 +5,17 @@ pipeline {
         choice(
             name: 'LABEL',
             choices: ['QA', 'Beta', 'Release']
+            description: 'Select build type for artifact publishing'
         )
 
         string(
             name: 'VERSION',
-            defaultValue: '1.0.0'
+            description: 'Enter release version (Example: 1.0.0)'
         )
 
         string(
             name: 'QA_PERSON',
-            defaultValue: 'Peter'
+            description: 'Enter QA engineer name'
         )
     }
 
