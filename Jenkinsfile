@@ -36,15 +36,17 @@ pipeline {
 
                     cd ${DEPLOY_DIR}
 
+                    rm -rf **
+
                     source .env
                     
-                    mkdir -p deploy
-                    cd deploy
-
                     mvn dependency:get \
                     -Dartifact=${GROUP_ID}:${ARTIFACT_NAME}:${params.PACKAGE_VERSION}:jar \
                     -DremoteRepositories=${REPO_NAME}::default::https://eva-saas-domain-909783398453.d.codeartifact.us-east-1.amazonaws.com/maven/${REPO_NAME}/ \
                     -DoutputDirectory=.
+
+                    mv ~/.m2/repository/com/eva/${ARTIFACT_NAME}/${params.PACKAGE_VERSION} ${DEPLOY_DIR}/
+                    
                     '
                     """
                 }
