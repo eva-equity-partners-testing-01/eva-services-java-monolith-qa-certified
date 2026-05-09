@@ -75,7 +75,7 @@ pipeline {
 
     post {
         success {
-            eecho "=========================================="
+            echo "=========================================="
             echo "ARTIFACT PUBLISHED SUCCESSFULLY"
             echo "=========================================="
             echo "Package Name : com.eva:eva-services-java-monolith"
