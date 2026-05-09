@@ -3,73 +3,60 @@ pipeline {
 
     parameters {
 
-        choice(
-            name: 'LABEL',
-            choices: ['QA', 'Beta', 'Release'],
-            description: 'Select build type for artifact publishing'
-        )
-    
         string(
-            name: 'VERSION',
+            name: 'PACKAGE_VERSION',
             defaultValue: '',
-            description: 'Enter release version (Example: 1.0.0)'
-        )
-    
-        string(
-            name: 'QA_PERSON',
-            defaultValue: '',
-            description: 'Enter QA engineer name'
+            description: 'Which package version to deploy? Example: 1.0.0-QA-Peter-20260509061545'
         )
     }
 
     environment {
-        QA_HOST     = '98.94.68.254'
-        QA_USER     = 'ubuntu'
-        SSH_CRED_ID = 'qa-server-ssh-key'
-        PROJECT_DIR = '/home/ubuntu/QA-Certified/eva-services-java-monolith'
-        MAVEN_HOME  = '/opt/apache-maven-3.5.2'
+
+        DEMO_HOST     = '35.175.126.147'
+        DEMO_USER     = 'ubuntu'
+        SSH_CRED_ID   = 'demo-environment'
+
+        DEPLOY_DIR    = '/home/ubuntu/demo-environment'
+
+        MAVEN_HOME    = '/usr/share/maven'
+
+        ARTIFACT_NAME = 'eva-services-java-monolith'
+        GROUP_ID      = 'com.eva'
+        REPO_NAME     = 'eva-services-java-monolith'
     }
 
     stages {
 
-        stage('Prepare Metadata') {
+        stage('Deploy Selected Package') {
+
             steps {
-                script {
-                    def buildDate = new Date().format("yyyyMMddHHmmss")
 
-                    env.DYNAMIC_VERSION =
-                        "${params.VERSION}-${params.LABEL}-${params.QA_PERSON}-${buildDate}"
-                        .replaceAll("\\s+","-")
-
-                    echo env.DYNAMIC_VERSION
-                }
-            }
-        }
-
-        stage('Update Version') {
-            steps {
                 sshagent(credentials: [SSH_CRED_ID]) {
+
                     sh """
-                    ssh -o StrictHostKeyChecking=no ${QA_USER}@${QA_HOST} '
-                    cd ${PROJECT_DIR}
+                    ssh -o StrictHostKeyChecking=no ${DEMO_USER}@${DEMO_HOST} '
 
-                    sed -i "/<artifactId>eva-services-java-monolith<\\\\/artifactId>/{n;s#<version>.*</version>#<version>${DYNAMIC_VERSION}</version>#;}" pom.xml
-                    '
-                    """
-                }
-            }
-        }
+                        set -e
 
-        stage('Deploy') {
-            steps {
-                sshagent(credentials: [SSH_CRED_ID]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ${QA_USER}@${QA_HOST} '
-                    cd ${PROJECT_DIR}
+                        cd ${DEPLOY_DIR}
 
-                    source .env
+                        echo "=================================="
+                        echo "Loading Environment"
+                        echo "=================================="
 
-                    ${MAVEN_HOME}/bin/mvn clean deploy -DskipTests
+                        source .env
+                        
+                        mkdir -p deploy
+                        cd deploy
+
+                        echo "=================================="
+                        echo "Downloading Artifact"
+                        echo "=================================="
+
+                        mvn dependency:get \
+                            -Dartifact=${GROUP_ID}:${ARTIFACT_NAME}:${PACKAGE_VERSION}:jar \
+                            -DremoteRepositories=${REPO_NAME}::default::https://eva-saas-domain-909783398453.d.codeartifact.us-east-1.amazonaws.com/maven/${REPO_NAME}/ \
+                            -DoutputDirectory=.
                     '
                     """
                 }
@@ -78,19 +65,19 @@ pipeline {
     }
 
     post {
+
         success {
             echo "=========================================="
-            echo "ARTIFACT PUBLISHED SUCCESSFULLY"
+            echo "DEPLOYMENT SUCCESSFUL"
             echo "=========================================="
-            echo "Package Name : com.eva:eva-services-java-monolith"
-            echo "Version      : ${env.DYNAMIC_VERSION}"
-            echo "Published To : AWS CodeArtifact"
+            echo "Server  : ${DEMO_HOST}"
+            echo "Version : ${params.PACKAGE_VERSION}"
+            echo "Path    : ${DEPLOY_DIR}"
             echo "=========================================="
-
         }
 
         failure {
-            echo "DEPLOY FAILED"
+            echo "DEPLOYMENT FAILED"
         }
     }
 }
