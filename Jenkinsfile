@@ -75,7 +75,14 @@ pipeline {
 
     post {
         success {
-            echo "DEPLOY SUCCESS"
+            eecho "=========================================="
+            echo "ARTIFACT PUBLISHED SUCCESSFULLY"
+            echo "=========================================="
+            echo "Package Name : com.eva:eva-services-java-monolith"
+            echo "Version      : ${env.DYNAMIC_VERSION}"
+            echo "Published To : AWS CodeArtifact"
+            echo "=========================================="
+
         }
 
         failure {
