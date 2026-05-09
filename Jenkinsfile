@@ -6,7 +6,7 @@ pipeline {
         string(
             name: 'PACKAGE_VERSION',
             defaultValue: '',
-            description: 'Which package version to deploy? Example: 1.0.0-QA-Peter-20260509061545'
+            description: 'Enter package version from CodeArtifact'
         )
     }
 
@@ -18,8 +18,6 @@ pipeline {
 
         DEPLOY_DIR    = '/home/ubuntu/demo-environment'
 
-        MAVEN_HOME    = '/usr/share/maven'
-
         ARTIFACT_NAME = 'eva-services-java-monolith'
         GROUP_ID      = 'com.eva'
         REPO_NAME     = 'eva-services-java-monolith'
@@ -27,7 +25,7 @@ pipeline {
 
     stages {
 
-        stage('Deploy Selected Package') {
+        stage('Deploy Selected Artifact') {
 
             steps {
 
@@ -40,23 +38,30 @@ pipeline {
 
                         cd ${DEPLOY_DIR}
 
-                        echo "=================================="
-                        echo "Loading Environment"
-                        echo "=================================="
+                        echo "======================================"
+                        echo "LOADING ENVIRONMENT"
+                        echo "======================================"
 
                         source .env
-                        
+
+                        export CODEARTIFACT_AUTH_TOKEN=\$(aws codeartifact get-authorization-token \
+                          --domain eva-saas-domain \
+                          --domain-owner 909783398453 \
+                          --region us-east-1 \
+                          --query authorizationToken \
+                          --output text)
+
                         mkdir -p deploy
                         cd deploy
 
-                        echo "=================================="
-                        echo "Downloading Artifact"
-                        echo "=================================="
+                        echo "======================================"
+                        echo "DOWNLOADING PACKAGE"
+                        echo "======================================"
 
                         mvn dependency:get \
-                            -Dartifact=${GROUP_ID}:${ARTIFACT_NAME}:${PACKAGE_VERSION}:jar \
-                            -DremoteRepositories=${REPO_NAME}::default::https://eva-saas-domain-909783398453.d.codeartifact.us-east-1.amazonaws.com/maven/${REPO_NAME}/ \
-                            -DoutputDirectory=.
+                        -Dartifact=${GROUP_ID}:${ARTIFACT_NAME}:${params.PACKAGE_VERSION}:jar \
+                        -DremoteRepositories=${REPO_NAME}::default::https://eva-saas-domain-909783398453.d.codeartifact.us-east-1.amazonaws.com/maven/${REPO_NAME}/ \
+                        -DoutputDirectory=.
                     '
                     """
                 }
@@ -67,17 +72,22 @@ pipeline {
     post {
 
         success {
+
             echo "=========================================="
             echo "DEPLOYMENT SUCCESSFUL"
             echo "=========================================="
-            echo "Server  : ${DEMO_HOST}"
+            echo "Package : com.eva:eva-services-java-monolith"
             echo "Version : ${params.PACKAGE_VERSION}"
+            echo "Server  : ${DEMO_HOST}"
             echo "Path    : ${DEPLOY_DIR}"
             echo "=========================================="
         }
 
         failure {
+
+            echo "=========================================="
             echo "DEPLOYMENT FAILED"
+            echo "=========================================="
         }
     }
 }
