@@ -28,7 +28,7 @@ pipeline {
         QA_USER        = 'ubuntu'
         SSH_CRED_ID    = 'qa-server-ssh-key'
         PROJECT_DIR    = '/home/ubuntu/QA-Certified/eva-services-java-monolith'
-        MAVEN_HOME     = '/opt/apache-maven-3.5.2/bin/mvn'
+        MAVEN_HOME     = '/opt/apache-maven-3.5.2'
     }
 
     stages {
