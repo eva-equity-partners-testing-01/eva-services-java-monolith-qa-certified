@@ -18,7 +18,7 @@ pipeline {
         string(
             name: 'QA_PERSON',
             defaultValue: '',
-            description: 'Enter QA engineer name (Example: Peter)'
+            description: 'Enter QA engineer name'
         )
     }
 
