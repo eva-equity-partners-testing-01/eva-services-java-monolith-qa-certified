@@ -5,7 +5,7 @@ pipeline {
         string(
             name: 'PACKAGE_VERSION',
             defaultValue: '',
-            description: 'Enter exact package version (Example: 1.0.0-QA-Peter-20260509061545)'
+            description: 'Enter exact package version'
         )
     }
 
